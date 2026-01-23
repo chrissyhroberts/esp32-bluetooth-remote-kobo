@@ -55,3 +55,14 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# macOS
+# Icon files, Finder metadata, and system folders
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100/
+.Trashes/
+.VolumeIcon.icns
+
