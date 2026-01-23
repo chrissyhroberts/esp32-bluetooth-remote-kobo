@@ -1,4 +1,6 @@
-# Prerequisites
+.pio
+.vscode/
+
 *.d
 
 # Object files
