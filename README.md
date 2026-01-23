@@ -4,6 +4,13 @@ A PlatformIO project that builds firmware for a Lilka-based BLE device (ESP32‑
 
 This repository contains the PlatformIO project sources, configuration, and supporting libraries.
 
+## Demo
+
+
+[![Demo video](img/lilka-kobo-demo-video.png)](https://youtu.be/TLT_gMcJIik)
+
+
+
 ## What's inside
 
 - `platformio.ini`: PlatformIO configuration and board/environment settings.
