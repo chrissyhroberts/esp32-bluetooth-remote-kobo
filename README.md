@@ -1,8 +1,8 @@
-# Lilka BLE Kobo e-reader page turner
+# Lilka BLE Kobo: Bluetooth remote page turner for Kobo e-readers
 
-A PlatformIO project that builds firmware for a Lilka-based BLE device (ESP32‑S3‑WROOM) intended to interact with Kobo devices. 
+A compact Bluetooth Low Energy (BLE) remote control and wireless page-turner firmware for Kobo e-readers, built for Lilka-like boards (ESP32‑S3‑WROOM). It provides reliable wireless page turns, configurable button mapping, and easy pairing with Kobo devices (tested on Kobo Clara 2E).
 
-This repository contains the PlatformIO project sources, configuration, and supporting libraries.
+This PlatformIO project contains the firmware source, PlatformIO configuration, and supporting libraries to build and flash the device.
 
 ## Demo
 
