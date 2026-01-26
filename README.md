@@ -1,4 +1,4 @@
-# Lilka BLE Kobo: Bluetooth remote page turner for Kobo e-readers
+# ESP32 Bluetooth Kobo e-reader page turner built with Lilka
 
 A compact Bluetooth Low Energy (BLE) remote control and wireless page-turner firmware for Kobo e-readers, built for Lilka-like boards (ESP32‑S3‑WROOM). It provides reliable wireless page turns, configurable button mapping, and easy pairing with Kobo devices (tested on Kobo Clara 2E).
 
