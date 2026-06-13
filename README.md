@@ -200,3 +200,75 @@ This repository contains original work together with adaptations of MIT-licensed
 * Improved enclosure ergonomics
 * Smaller PCB-based hardware revision
 * Optional support for additional e-reader platforms
+
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on Keep a Changelog.
+
+## [0.2.0] - 2026-06-13
+
+### Added
+
+* Migrated project to Adafruit HUZZAH32 Feather ESP32.
+* Added support for LiPo battery operation using onboard JST connector.
+* Added support for integrated USB charging via Feather hardware.
+* Added custom 3D printed handheld enclosure.
+* Added support for MX-compatible mechanical keyboard switches.
+* Added serial debugging messages for button presses and BLE connection state.
+* Added documentation and build instructions.
+
+### Changed
+
+* Replaced ESP32-C3 SuperMini hardware with HUZZAH32 Feather.
+* Simplified hardware architecture by eliminating external charger modules.
+* Updated button assignments:
+
+  * GPIO14 → Next page
+  * GPIO27 → Previous page
+* Redesigned enclosure for side-mounted switch operation using index and middle fingers.
+* Optimised device layout around Feather form factor and LiPo battery.
+
+### Fixed
+
+* Resolved BLE pairing and connection issues during migration from ESP32-C3.
+* Confirmed compatibility with Kobo Bluetooth keyboard input.
+* Verified HID arrow key transmission on HUZZAH32 platform.
+
+## [0.1.0] - 2026-06-13
+
+### Added
+
+* Initial proof-of-concept implementation based on:
+
+  * https://github.com/tkanov/esp32-bluetooth-remote-kobo
+* BLE HID keyboard functionality.
+* Kobo page-turn support using left and right arrow keys.
+* ESP32-C3 SuperMini firmware build environment.
+* PlatformIO build and upload workflow.
+* Basic two-button operation:
+
+  * Next page
+  * Previous page
+* BLE bonding and security configuration.
+* Reboot button support.
+* Serial status reporting.
+
+### Hardware
+
+* ESP32-C3 SuperMini.
+* Two momentary push-buttons connected directly to GPIO inputs.
+* USB-powered operation.
+
+## Planned
+
+### [0.3.0]
+
+* Deep sleep support.
+* Wake on button press.
+* Automatic sleep after inactivity.
+* Battery-life optimisation.
+* Battery status indication.
+* Improved enclosure ergonomics.
+* Finalised printable enclosure design.
