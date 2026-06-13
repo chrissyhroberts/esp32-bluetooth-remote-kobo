@@ -1,66 +1,202 @@
-# ESP32 Bluetooth Kobo e-reader page turner built with Lilka
+# Kobo BLE Page Turner
 
-A compact Bluetooth Low Energy (BLE) remote control and wireless page-turner firmware for Kobo e-readers, built for Lilka-like boards (ESP32‑S3‑WROOM). It provides reliable wireless page turns, configurable button mapping, and easy pairing with Kobo devices (tested on Kobo Clara 2E).
+A simple Bluetooth page-turning remote for Kobo e-readers built using an ESP32, two mechanical keyboard switches, and a rechargeable LiPo battery.
 
-This PlatformIO project contains the firmware source, PlatformIO configuration, and supporting libraries to build and flash the device.
+The device acts as a Bluetooth HID keyboard and sends left and right arrow key presses to a Kobo reader. It is designed as a compact handheld remote that can be comfortably operated using the index and middle fingers while reading.
 
-## Demo
+## Features
 
+* Bluetooth Low Energy (BLE) HID keyboard
+* Compatible with Kobo e-readers that support Bluetooth keyboards
+* Two-button interface:
 
-[![Demo video](img/lilka-kobo-demo-video.png)](https://youtu.be/TLT_gMcJIik)
+  * Next page
+  * Previous page
+* Rechargeable LiPo battery support
+* USB charging via Adafruit HUZZAH32 Feather
+* Mechanical keyboard switches for improved tactile feedback
+* Open-source hardware and software
+* Fully self-contained handheld design
 
+## Hardware
 
+### Current Build
 
-## What's inside
+| Component       | Description                                    |
+| --------------- | ---------------------------------------------- |
+| Microcontroller | Adafruit HUZZAH32 Feather ESP32                |
+| Battery         | 3.7V LiPo (150–500 mAh recommended)            |
+| Buttons         | 2 × MX-compatible mechanical keyboard switches |
+| Keycaps         | Standard MX-compatible keycaps                 |
+| Enclosure       | Custom 3D printed enclosure                    |
+| Charging        | Integrated Feather LiPo charger                |
 
-- `platformio.ini`: PlatformIO configuration and board/environment settings.
-- `src/main.cpp`: Main firmware source.
-- `include/`: Public header files and project-specific includes.
-- `lib/`: Local libraries used by the project.
-- `test/`: Test folder (project-specific tests or placeholders).
+### Wiring
 
-The last 3 directories are empty in this project.
+| GPIO   | Function      |
+| ------ | ------------- |
+| GPIO14 | Next page     |
+| GPIO27 | Previous page |
 
-## Requirements
+Connect each switch between the GPIO pin and GND.
 
-- PlatformIO (VS Code + PlatformIO extension, or `platformio` CLI)
-- A supported toolchain for the target board (configured in `platformio.ini`)
+```text
+GPIO14 ---- Switch ---- GND
 
-## Build / Upload
-
-Build the firmware with PlatformIO:
-
-```bash
-pio run
+GPIO27 ---- Switch ---- GND
 ```
 
-Upload to a connected board:
+No external resistors are required because the firmware uses the ESP32's internal pull-up resistors.
 
-```bash
-pio run -t upload
+### Battery
+
+The current design uses a single-cell 3.7V LiPo battery connected directly to the Feather JST connector.
+
+Recommended capacities:
+
+| Capacity | Notes                              |
+| -------- | ---------------------------------- |
+| 150 mAh  | Compact, preferred for final build |
+| 300 mAh  | Good compromise                    |
+| 500 mAh  | Longer runtime                     |
+| 1200 mAh | Works but physically large         |
+
+## Enclosure
+
+The enclosure is designed around:
+
+* Adafruit HUZZAH32 Feather
+* Two MX switches mounted in a side wall
+* Small LiPo battery
+* USB access for charging and firmware updates
+
+The intended grip places one long side of the enclosure against the index and middle fingers, allowing page turns without changing grip.
+
+```text
+      SW1     SW2
+       ↓       ↓
+
+ ┌──────────────────┐
+ │                  │
+ │  Feather + LiPo  │
+ │                  │
+ └──────────────────┘
 ```
 
-Open the serial monitor:
+Current design goals:
 
-```bash
-pio device monitor
+* Approximately 80 × 32 × 20 mm
+* Lightweight
+* Rechargeable
+* One-handed operation
+* Easily printable without support
+
+## Firmware
+
+The firmware is written using Arduino and PlatformIO.
+
+The device advertises as:
+
+```text
+KoboPageTurner
 ```
 
-Alternatively, use vscode add-on PlatformIO UI:
+and appears to the Kobo as a Bluetooth keyboard.
 
-![PlatformIO UI](img/vscode-platformio.png)
+### Building
 
-## Where to look
+```bash
+python3 -m platformio run -e huzzah32
+```
 
-- Firmware entrypoint: `src/main.cpp`
-- Project configuration: `platformio.ini`
+### Uploading
 
-## Contributing
+```bash
+python3 -m platformio run -e huzzah32 -t upload
+```
 
-Pull requests are welcome. If you open an issue or PR, include the PlatformIO environment you used and steps to reproduce.
+### Serial Monitor
+
+```bash
+python3 -m platformio device monitor -b 115200
+```
+
+## Pairing
+
+1. Power on the device.
+2. Open Bluetooth settings on the Kobo.
+3. Search for:
+
+```text
+KoboPageTurner
+```
+
+4. Pair and connect.
+5. Open a book and test page turns.
+
+## Power Management
+
+The current firmware remains continuously connected.
+
+Planned behaviour:
+
+```text
+Button press
+    ↓
+Wake ESP32
+    ↓
+Start BLE
+    ↓
+Connect to Kobo
+    ↓
+Remain active
+    ↓
+5 minutes inactivity
+    ↓
+Deep sleep
+```
+
+This should allow excellent battery life even with a small 150 mAh LiPo cell.
+
+## Development History
+
+The project was initially prototyped using an ESP32-C3 SuperMini before being migrated to an Adafruit HUZZAH32 Feather to take advantage of:
+
+* Integrated LiPo charging
+* JST battery connector
+* Simplified hardware
+* Easier prototyping
+
+## Acknowledgements
+
+### Firmware
+
+This project builds upon and adapts the work of:
+
+* https://github.com/tkanov/esp32-bluetooth-remote-kobo
+
+The original project targets the Lilka ESP32 platform and demonstrates BLE page turning for Kobo devices. This project adapts the concept for the Adafruit HUZZAH32 Feather and a custom handheld enclosure.
+
+### Enclosure
+
+The enclosure design was inspired by:
+
+* https://www.thingiverse.com/thing:3824089
+
+which provided the basis for Cherry MX switch mounting and plate geometry used during enclosure development.
 
 ## License
 
-This repository includes a `LICENSE` file in the root. Refer to that file for license details.
+MIT License.
 
----
+This repository contains original work together with adaptations of MIT-licensed open-source software and design concepts. Attribution to upstream projects is provided in the acknowledgements section.
+
+## Future Work
+
+* Deep sleep support
+* Wake on button press
+* Battery level monitoring
+* Status LED indication
+* Improved enclosure ergonomics
+* Smaller PCB-based hardware revision
+* Optional support for additional e-reader platforms

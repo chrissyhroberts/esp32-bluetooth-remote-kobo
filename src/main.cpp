@@ -1,101 +1,116 @@
 #include <Arduino.h>
-#include <lilka.h>
 #include <BleKeyboard.h>
-#include <esp_ota_ops.h>
 #include <BLEDevice.h>
 #include <BLESecurity.h>
 
+// Kobo BLE page turner for Adafruit HUZZAH32 / Feather ESP32.
+//
+// Wiring:
+// GPIO14 ---- button ---- GND   Next page
+// GPIO27 ---- button ---- GND   Previous page
+//
+// Optional reboot button:
+// GPIO32 ---- button ---- GND   Hold for 2 seconds to reboot
+
+static const int NEXT_PIN = 14;
+static const int PREV_PIN = 27;
+static const int REBOOT_PIN = 32;
+
+BleKeyboard bleKeyboard("KoboPageTurner");
 
 static void setupBleSecurityNoMitm() {
   auto *sec = new BLESecurity();
 
-  sec->setAuthenticationMode(ESP_LE_AUTH_BOND);  // most compatible
-
-  sec->setCapability(ESP_IO_CAP_NONE);  // no input/output -> just works
+  sec->setAuthenticationMode(ESP_LE_AUTH_BOND);
+  sec->setCapability(ESP_IO_CAP_NONE);
   sec->setKeySize(16);
 
   sec->setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
   sec->setRespEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
 }
 
+static bool fell(int pin) {
+  static uint32_t lastPressMs[40] = {0};
 
-static void markOtaValidIfNeeded() {
-  const esp_partition_t* running = esp_ota_get_running_partition();
-  esp_ota_img_states_t state;
-  if (esp_ota_get_state_partition(running, &state) == ESP_OK &&
-      state == ESP_OTA_IMG_PENDING_VERIFY) {
-    Serial.println("OTA: pending verify -> marking valid");
-    esp_ota_mark_app_valid_cancel_rollback();
+  if (digitalRead(pin) == LOW) {
+    uint32_t now = millis();
+
+    if (now - lastPressMs[pin] > 250) {
+      lastPressMs[pin] = now;
+      return true;
+    }
   }
-}
 
-BleKeyboard bleKeyboard("LilPageTurner");
-
-static void draw(bool connected) {
-  lilka::display.fillScreen(lilka::colors::Black);
-  lilka::display.setCursor(0, 0);
-  lilka::display.setTextColor(lilka::colors::White);
-  lilka::display.print("PageTurner\n\n");
-
-  lilka::display.setTextColor(connected ? lilka::colors::Green : lilka::colors::Yellow);
-  lilka::display.print(connected ? "BLE: Connected\n" : "BLE: Advertising\n");
-
-  lilka::display.setTextColor(lilka::colors::White);
-  lilka::display.print("\nA/Right: Next\nB/Left: Prev\nHold SELECT: Reboot\n");
-
+  return false;
 }
 
 void setup() {
   Serial.begin(115200);
-  delay(200);
+  delay(300);
 
-  lilka::begin();
+  pinMode(NEXT_PIN, INPUT_PULLUP);
+  pinMode(PREV_PIN, INPUT_PULLUP);
+  pinMode(REBOOT_PIN, INPUT_PULLUP);
 
-  // If your backlight is off or screen blinks, try this:
-  lilka::board.disablePowerSavingMode();
+  Serial.println("Starting HUZZAH32 Kobo BLE page turner...");
 
-  Serial.println("BLE: about to begin()");
   bleKeyboard.begin();
-
   setupBleSecurityNoMitm();
 
-  markOtaValidIfNeeded();
-
-  draw(bleKeyboard.isConnected());
+  Serial.println("Advertising as KoboPageTurner");
 }
 
 void loop() {
-  lilka::State s = lilka::controller.getState();
+  static bool wasConnected = false;
+  bool connected = bleKeyboard.isConnected();
 
-  // Page turns
-  if (s.a.justPressed || s.right.justPressed) {
-    if (bleKeyboard.isConnected()) bleKeyboard.write(KEY_RIGHT_ARROW);
-  }
-  if (s.b.justPressed || s.left.justPressed) {
-    if (bleKeyboard.isConnected()) bleKeyboard.write(KEY_LEFT_ARROW);
+  if (connected != wasConnected) {
+    wasConnected = connected;
+    Serial.println(connected ? "BLE connected" : "BLE advertising");
   }
 
-  // safe "exit": long-press SELECT for 1.5s, after a 2s grace period
-  static uint32_t bootMs = millis();
-  static uint32_t selectDownMs = 0;
+  if (fell(NEXT_PIN)) {
+    bool connectedNow = bleKeyboard.isConnected();
 
-  if (millis() - bootMs > 2000) {
-    if (s.select.pressed) {
-      if (selectDownMs == 0) selectDownMs = millis();
-      if (millis() - selectDownMs > 1500) {
-        ESP.restart();
-      }
+    Serial.print("Next page pressed, connected=");
+    Serial.println(connectedNow ? "YES" : "NO");
+
+    if (connectedNow) {
+      bleKeyboard.write(KEY_RIGHT_ARROW);
+      Serial.println("Sent KEY_RIGHT_ARROW");
     } else {
-      selectDownMs = 0;
+      Serial.println("Not sent: BLE not connected");
     }
   }
 
-  // UI refresh only when connection state changes
-  static bool lastConnected = bleKeyboard.isConnected();
-  bool currentConnected = bleKeyboard.isConnected();
-  if (currentConnected != lastConnected) {
-    lastConnected = currentConnected;
-    draw(currentConnected);
+  if (fell(PREV_PIN)) {
+    bool connectedNow = bleKeyboard.isConnected();
+
+    Serial.print("Previous page pressed, connected=");
+    Serial.println(connectedNow ? "YES" : "NO");
+
+    if (connectedNow) {
+      bleKeyboard.write(KEY_LEFT_ARROW);
+      Serial.println("Sent KEY_LEFT_ARROW");
+    } else {
+      Serial.println("Not sent: BLE not connected");
+    }
+  }
+
+  static uint32_t rebootDownMs = 0;
+
+  if (digitalRead(REBOOT_PIN) == LOW) {
+    if (rebootDownMs == 0) {
+      rebootDownMs = millis();
+    }
+
+    if (millis() - rebootDownMs > 2000) {
+      Serial.println("Rebooting...");
+      delay(100);
+      ESP.restart();
+    }
+  } else {
+    rebootDownMs = 0;
   }
 
   delay(10);
