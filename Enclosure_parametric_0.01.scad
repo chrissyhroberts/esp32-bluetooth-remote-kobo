@@ -185,8 +185,8 @@ module build_swithes(){
 
 
 case_w = 85;
-case_h = 30;
-case_d = 50;
+case_h = 45;
+case_d = 20;
 wall = 2;
 r = 4;
 
@@ -267,7 +267,7 @@ module feather_mounts() {
 lid_screw_d = 2.2;       // hole in lid, clearance for M2
 boss_hole_d = 1.6;       // pilot hole in case boss for M2 self-tapper
 boss_d = 5.5;
-boss_h = 48;
+boss_h = 17;
 
 screw_x = case_w/2 - 6;
 screw_y = case_h/2 - 6;
@@ -280,35 +280,17 @@ module screw_positions() {
 }
 
 module case_screw_bosses() {
-
-
-
-    // Bottom right
-    translate([screw_x,-screw_y,-case_d/3 + wall + boss_h/2])
-    difference() {
-        cylinder(h=boss_h,d=boss_d,center=true);
-        cylinder(h=boss_h+1,d=boss_hole_d,center=true);
-    }
-
-    // Top left
-    translate([-screw_x,screw_y,-case_d/3 + wall + boss_h/2])
-    difference() {
-        cylinder(h=boss_h,d=boss_d,center=true);
-        cylinder(h=boss_h+1,d=boss_hole_d,center=true);
-    }
+    screw_positions()
+        translate([0,0,-case_d/2 + wall + boss_h/2])
+        difference() {
+            cylinder(h=boss_h, d=boss_d, center=true);
+            cylinder(h=boss_h + 1, d=boss_hole_d, center=true);
+        }
 }
 
 module lid_screw_holes() {
-
-
-    translate([screw_x,-screw_y,0])
-
-        cylinder(h=lid_thick+1,d=lid_screw_d,center=true);
-
-    translate([-screw_x,screw_y,0])
-
-        cylinder(h=lid_thick+1,d=lid_screw_d,center=true);
-
+    screw_positions()
+        cylinder(h=lid_thick + 1, d=lid_screw_d, center=true);
 }
 
 
@@ -330,56 +312,28 @@ module shell() {
         union() {
     hollow_body();
 
-    //translate([0,-4,5])feather_mounts();
-    translate([10,3,20])build_swithes();
-    translate([0,0,-9])case_screw_bosses();
+    translate([0,0,5])
+        build_swithes();
 
+    translate([0,-4,5])
+        feather_mounts();
+
+    case_screw_bosses();
 }
-    //slot for battery
-    translate([-3,-10,0])cube([70,7,45], center=true);
 
         // cut only switch holes
-        translate([10, 3, 12])switch_holes_only();
+        switch_holes_only();
 
         // clearance below switches
-        translate([space/2, 0, -1])cube([space*1.8, plateLength*0.8, 10], center=true);
+        translate([space/2, 0, -1])
+            cube([space*1.8, plateLength*0.8, 10], center=true);
 
         // USB access slot on short edge
-        //translate([0,0,-2.5])usb_slot();
+        translate([0,0,-2.5])usb_slot();
     }
 }
 
-// ---------- Lid-mounted Feather ----------
-lid_feather_standoff_h = 5;
-lid_feather_standoff_d = 5.5;
-lid_feather_hole_d = 2.6;
 
-// measured by you
-feather_hole_spacing_x = 45;
-feather_hole_spacing_y = 18;
-
-// shift Feather on lid to align USB with case slot
-lid_feather_x_offset = 0;
-lid_feather_y_offset = -4;
-
-module lid_feather_standoff(x, y) {
-    translate([
-        x + lid_feather_x_offset,
-        y + lid_feather_y_offset,
-        lid_thick/2 + lid_feather_standoff_h/2
-    ])
-    difference() {
-        cylinder(h=lid_feather_standoff_h, d=lid_feather_standoff_d, center=true);
-        cylinder(h=lid_feather_standoff_h + 1, d=lid_feather_hole_d, center=true);
-    }
-}
-
-module lid_feather_mounts() {
-    lid_feather_standoff(-feather_hole_spacing_x/2, -feather_hole_spacing_y/2);
-    lid_feather_standoff( feather_hole_spacing_x/2, -feather_hole_spacing_y/2);
-    lid_feather_standoff(-feather_hole_spacing_x/2,  feather_hole_spacing_y/2);
-    lid_feather_standoff( feather_hole_spacing_x/2,  feather_hole_spacing_y/2);
-}
 
 // ---------- Lid ----------
 lid_thick = 2;
@@ -395,23 +349,12 @@ module rounded_rect_2d(w, h, rad) {
 }
 
 module lid() {
-
     difference() {
-
-        union() {
-
-            // lid plate
-            linear_extrude(height=lid_thick, center=true)
-                rounded_rect_2d(lid_w, lid_h, lid_r);
-            // Feather mounts on inside face
-            translate([0,4,0])lid_feather_mounts();
-
-        }
+        linear_extrude(height=lid_thick, center=true)
+            rounded_rect_2d(lid_w, lid_h, lid_r);
 
         lid_screw_holes();
-
     }
-
 }
 
 

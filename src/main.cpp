@@ -2,21 +2,16 @@
 #include <BleKeyboard.h>
 #include <BLEDevice.h>
 #include <BLESecurity.h>
-
-// Kobo BLE page turner for Adafruit HUZZAH32 / Feather ESP32.
-//
-// Wiring:
-// GPIO14 ---- button ---- GND   Next page
-// GPIO27 ---- button ---- GND   Previous page
-//
-// Optional reboot button:
-// GPIO32 ---- button ---- GND   Hold for 2 seconds to reboot
+#include "esp_sleep.h"
 
 static const int NEXT_PIN = 14;
 static const int PREV_PIN = 27;
-static const int REBOOT_PIN = 32;
+
+static const uint32_t SLEEP_AFTER_MS = 5UL * 60UL * 1000UL;
 
 BleKeyboard bleKeyboard("KoboPageTurner");
+
+static uint32_t lastActivityMs = 0;
 
 static void setupBleSecurityNoMitm() {
   auto *sec = new BLESecurity();
@@ -37,11 +32,27 @@ static bool fell(int pin) {
 
     if (now - lastPressMs[pin] > 250) {
       lastPressMs[pin] = now;
+      lastActivityMs = now;
       return true;
     }
   }
 
   return false;
+}
+
+static void goToSleep() {
+  Serial.println("Sleeping after inactivity...");
+  delay(100);
+
+  // Wake when either button is pressed.
+  // Buttons are INPUT_PULLUP, so press = LOW.
+  esp_sleep_enable_ext0_wakeup((gpio_num_t)NEXT_PIN, 0);
+
+  // Note: ESP32 ext0 supports one wake pin only.
+  // For now, NEXT wakes the device.
+  // We can add both buttons with ext1 if needed.
+
+  esp_deep_sleep_start();
 }
 
 void setup() {
@@ -50,9 +61,11 @@ void setup() {
 
   pinMode(NEXT_PIN, INPUT_PULLUP);
   pinMode(PREV_PIN, INPUT_PULLUP);
-  pinMode(REBOOT_PIN, INPUT_PULLUP);
+
+  lastActivityMs = millis();
 
   Serial.println("Starting HUZZAH32 Kobo BLE page turner...");
+  Serial.println("First press after sleep wakes only; subsequent presses turn pages.");
 
   bleKeyboard.begin();
   setupBleSecurityNoMitm();
@@ -67,6 +80,7 @@ void loop() {
   if (connected != wasConnected) {
     wasConnected = connected;
     Serial.println(connected ? "BLE connected" : "BLE advertising");
+    lastActivityMs = millis();
   }
 
   if (fell(NEXT_PIN)) {
@@ -97,20 +111,8 @@ void loop() {
     }
   }
 
-  static uint32_t rebootDownMs = 0;
-
-  if (digitalRead(REBOOT_PIN) == LOW) {
-    if (rebootDownMs == 0) {
-      rebootDownMs = millis();
-    }
-
-    if (millis() - rebootDownMs > 2000) {
-      Serial.println("Rebooting...");
-      delay(100);
-      ESP.restart();
-    }
-  } else {
-    rebootDownMs = 0;
+  if (millis() - lastActivityMs > SLEEP_AFTER_MS) {
+    goToSleep();
   }
 
   delay(10);
