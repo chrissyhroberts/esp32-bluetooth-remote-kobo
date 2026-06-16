@@ -4,6 +4,22 @@ A simple Bluetooth page-turning remote for Kobo e-readers built using an ESP32, 
 
 The device acts as a Bluetooth HID keyboard and sends left and right arrow key presses to a Kobo reader. It is designed as a compact handheld remote that can be comfortably operated using the index and middle fingers while reading.
 
+Also works as a slide-clicker for presenting in powerpoint etc. on a laptop or phone. 
+
+<img width="450" height="350" alt="WhatsApp Image 2026-06-16 at 10 27 49" src="https://github.com/user-attachments/assets/34cedbea-a9f3-423e-a88d-ee5cf950873f" />
+<img width="300" height="350" alt="WhatsApp Image 2026-06-16 at 10 27 48 (1)" src="https://github.com/user-attachments/assets/54478aaa-7568-4d6e-9358-b1c2744bea74" />
+
+
+## Demo
+
+
+
+
+
+
+
+
+
 ## Features
 
 * Bluetooth Low Energy (BLE) HID keyboard
