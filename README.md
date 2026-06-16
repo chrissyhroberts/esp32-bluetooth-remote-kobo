@@ -12,7 +12,10 @@ Also works as a slide-clicker for presenting in powerpoint etc. on a laptop or p
 
 ## Demo
 
-<video src="img/demo.mp4" controls width="600"></video>
+
+
+https://github.com/user-attachments/assets/7c18b657-2313-463f-bc3e-a1ec03a47499
+
 
 ## Features
 
